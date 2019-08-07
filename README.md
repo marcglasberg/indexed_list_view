@@ -1,16 +1,18 @@
 # indexed_list_view
 
-Similar to a ListView, but lets you programmatically jump to any item, by index.
-Currently, the list is always infinite both to positive and negative indexes.
+Similar to a ListView, but lets you **programmatically jump to any item**, by index.
+The index jump happens **instantly**, no matter if you have millions of items.
+
+Limitation: The list is always infinite both to positive and negative indexes.
 In other words, it can be scrolled indefinitely both to the top and to the bottom.
+You can give it an item count, but this will not prevent the list from scrolling indefinitely.
 
 ## Usage
 
 ### Import the package
 
-First, add indexed_list_view [as a dependency](https://pub.dartlang.org/packages/indexed_list_view#-installing-tab-) in your pubspec.yaml
-
-Then, import it:
+Add indexed_list_view [as a dependency](https://pub.dartlang.org/packages/indexed_list_view#-installing-tab-) 
+in your `pubspec.yaml` file, and then import it:
 
     import 'package:indexed_list_view/indexed_list_view.dart';
 
@@ -18,39 +20,117 @@ Then, import it:
 
 First, create an indexed scroll controller:
 
-    IndexedScrollController controller = IndexedScrollController();
+    var controller = IndexedScrollController();
+    
+Optionally, you may setup an initial index and/or initial scroll offset:
 
-Then, create the indexed list view, and pass that controller:
+    var controller = IndexedScrollController(
+        initialIndex: 75,
+        initialScrollOffset : 30.0);    
 
-    IndexedListView.builder(controller: controller, itemBuilder: itemBuilder);
+Then, create the indexed list view, and pass it the controller:
 
-To jump, use the controller's `jumpToIndex` method:
+    IndexedListView.builder(
+        controller: controller, 
+        itemBuilder: itemBuilder);
+
+There is also the separated constructor, same as `ListView.separated`:
+
+    IndexedListView.separated(
+        controller: controller, 
+        itemBuilder: itemBuilder,
+        separatorBuilder: separatorBuilder);
+
+To jump, use the controller methods like `jumpToIndex` :
 
     controller.jumpToIndex(10000);
 
-The jump is cheap, since it doesn't need to build all widgets between the old and new positions.
-However, if all you need is an infinite list, without jumps, there is no need to even define a controller.
+## Details
+
+The IndexedScrollController has not only an `offset` in pixels, 
+but also an `origin-index` that indicates which item is considered to be at the offset position `0.0`.
+
+So there are two ways for you to move the list programmatically: 
+You can change only the `offset`, 
+or else change the `originIndex` and the `offset` at the same time.
+
+To change the `originIndex` you make an "index jump". 
+This jump is cheap, since it doesn't need to build all widgets between the old and new positions.
+It will just change the origin.
+
+If you want to move the list programmatically you must create a scroll controller of type `IndexedScrollController` 
+and pass it in the list constructor.
+However, if all you need is an infinite list without jumps, then there is no need to even create a controller.
+
+You move the list programmatically by calling the controller methods.   
+
+## Controller Methods
+
+1. `jumpToIndex(index)`
+
+    The is the most common method for you to use.
+    It jumps the origin-index to the given index, and the scroll-position to 0.0.
+
+2. `jumpToIndexAndOffset(index, offset)`
+
+   Jumps the origin-index to the given index, and the scroll-position to offset, without animation.
+  
+3. `animateToIndex(index)`
+
+   If the current origin-index is already the same as the given index,
+   animates the position from its current value to the offset position
+   relative to the origin-index.    
+   
+   However, if the current origin-index is different from the given index,
+   this will jump to the new index, without any animation.
+   In general, there are never animations when the index changes.
+
+2. `animateToIndexAndOffset(index, offset)`
+
+   Same as `animateToIndex()` but also lets you specify the new offset.
+  
+4. `jumpTo(offset)`
+
+    Goes to origin-index "0", 
+    and then jumps the scroll position from its current value to the given offset,
+    without animation.
+
+4. `animateTo(offset)`
+
+   If the current origin-index is already "0",
+   animates the position from its current value to the offset position.
+   
+   However, if the current origin-index is different from "0",
+   this will jump to index "0" and the given offset, without any animation.
+   In general, there are never animations when the index changes.
+
+5. `jumpToWithSameOriginIndex(offset)`
+   
+   Jumps the offset, relative to the current origin-index.
+
+6. `animateToWithSameOriginIndex(offset)`
+
+   Animates the offset, relative to the current origin-index.
+
+7. `jumpToRelative(offset)`
+
+   Jumps the offset, adding or subtracting from the current offset.
+   It keeps the same origin-index.
+
+8. `animateToRelative(offset)`
+
+   Animates the offset, adding or subtracting from the current offset.
+   It keeps the same origin-index.
+
+Don't forget to check the [example tab](https://pub.dartlang.org/packages/indexed_list_view#-example-tab-).
+It shows an infinite list of items of different heights, and you may tap buttons to
+run some of the methods explained above.
+
+********
 
 Hopefully this widget will become obsolete when Flutter's original ListView allows for negative
 indexes and for indexed jumps. See: https://github.com/flutter/flutter/issues/12319
 
-Don't forget to check the [example tab](https://pub.dartlang.org/packages/indexed_list_view#-example-tab-).
+*This package got some ideas from [Collin Jackson's code in StackOverflow](https://stackoverflow.com/questions/44468337/how-can-i-make-a-scrollable-wrapping-view-with-flutter),
+and used lots of code from [Simon Lightfoot's infinite_listview](https://pub.dev/packages/infinite_listview).* 
 
-# TODO
-
-- [X] Jump to index.
-- [X] Infinite list (both up and down).
-- [ ] Allow passing lower and upper bounds, so that the list doesn't need to be infinite.
-- [ ] Allow for scrollbars (makes sense in the finite case only).
-- [ ] Make the list trackable, so that you know which item indexes are visible in the top and bottom
-      of the viewport.
-- [ ] Fixing a bug where under certain rare circumstances the user can't stop a ballistic scroll
-      until it stops by itself.
-
-This package got some ideas from [Collin Jackson's code in StackOverflow](https://stackoverflow.com/questions/44468337/how-can-i-make-a-scrollable-wrapping-view-with-flutter).
-
-## Getting Started
-
-For help getting started with Flutter, view our online [documentation](https://flutter.io/).
-
-For help on editing package code, view the [documentation](https://flutter.io/developing-packages/).

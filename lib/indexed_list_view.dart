@@ -1,291 +1,486 @@
-library indexed_list_view;
+library infinite_listview;
 
-import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 
+// Developed by Marcelo Glasberg (Aug 2019).
+// Based upon package infinite_list_view by Simon Lightfoot.
+// For more info, see: https://pub.dartlang.org/packages/indexed_list_view
+
+/// Indexed List View
+///
+/// ListView that lets you jump instantly to any index.
+/// Only works for lists with infinite extent.
 class IndexedListView extends StatefulWidget {
-  //
-  const IndexedListView.builder({
+  /// See [ListView.builder]
+  IndexedListView.builder({
     Key key,
-    this.itemBuilder,
-    this.controller,
-  }) : super(key: key);
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
+    IndexedScrollController controller,
+    this.physics,
+    this.padding,
+    this.itemExtent,
+    @required IndexedWidgetBuilder itemBuilder,
+    int itemCount,
+    bool addAutomaticKeepAlives = true,
+    bool addRepaintBoundaries = true,
+    this.cacheExtent,
+  })  : separated = false,
+        positiveChildrenDelegate = SliverChildBuilderDelegate(
+          (BuildContext context, int index) =>
+              itemBuilder(context, index + controller._originIndex),
+          childCount: itemCount,
+          addAutomaticKeepAlives: addAutomaticKeepAlives,
+          addRepaintBoundaries: addRepaintBoundaries,
+        ),
+        negativeChildrenDelegate = SliverChildBuilderDelegate(
+          (BuildContext context, int index) =>
+              itemBuilder(context, -1 - index + controller._originIndex),
+          childCount: itemCount,
+          addAutomaticKeepAlives: addAutomaticKeepAlives,
+          addRepaintBoundaries: addRepaintBoundaries,
+        ),
+        controller = controller ?? IndexedScrollController(),
+        super(key: key);
 
+  /// See [ListView.separated]
+  IndexedListView.separated({
+    Key key,
+    this.scrollDirection = Axis.vertical,
+    this.reverse = false,
+    IndexedScrollController controller,
+    this.physics,
+    this.padding,
+    @required IndexedWidgetBuilder itemBuilder,
+    @required IndexedWidgetBuilder separatorBuilder,
+    int itemCount,
+    bool addAutomaticKeepAlives = true,
+    bool addRepaintBoundaries = true,
+    this.cacheExtent,
+  })  : assert(itemBuilder != null),
+        assert(separatorBuilder != null),
+        separated = true,
+        itemExtent = null,
+        positiveChildrenDelegate = SliverChildBuilderDelegate(
+          (BuildContext context, int index) {
+            final itemIndex = (index ~/ 2) + controller._originIndex;
+            return index.isEven
+                ? itemBuilder(context, itemIndex)
+                : separatorBuilder(context, itemIndex);
+          },
+          childCount: itemCount != null ? math.max(0, itemCount * 2 - 1) : null,
+          addAutomaticKeepAlives: addAutomaticKeepAlives,
+          addRepaintBoundaries: addRepaintBoundaries,
+        ),
+        negativeChildrenDelegate = SliverChildBuilderDelegate(
+          (BuildContext context, int index) {
+            final itemIndex = ((-1 - index) ~/ 2) + controller._originIndex;
+            return index.isOdd
+                ? itemBuilder(context, itemIndex)
+                : separatorBuilder(context, itemIndex);
+          },
+          childCount: itemCount,
+          addAutomaticKeepAlives: addAutomaticKeepAlives,
+          addRepaintBoundaries: addRepaintBoundaries,
+        ),
+        controller = controller ?? IndexedScrollController(),
+        super(key: key);
+
+  final bool separated;
+
+  /// See: [ScrollView.scrollDirection]
+  final Axis scrollDirection;
+
+  /// See: [ScrollView.reverse]
+  final bool reverse;
+
+  /// See: [ScrollView.controller]
   final IndexedScrollController controller;
-  final IndexedWidgetBuilder itemBuilder;
+
+  /// See: [ScrollView.physics]
+  final ScrollPhysics physics;
+
+  /// See: [BoxScrollView.padding]
+  final EdgeInsets padding;
+
+  /// See: [ListView.itemExtent]
+  final double itemExtent;
+
+  /// See: [ScrollView.cacheExtent]
+  final double cacheExtent;
+
+  /// See: [ListView.childrenDelegate]
+  final SliverChildDelegate negativeChildrenDelegate;
+
+  /// See: [ListView.childrenDelegate]
+  final SliverChildDelegate positiveChildrenDelegate;
 
   @override
   _IndexedListViewState createState() => _IndexedListViewState();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+// -------------------------------------------------------------------------------------------------
 
-class _UnboundedScrollPosition extends ScrollPositionWithSingleContext {
-  _UnboundedScrollPosition({
-    ScrollPhysics physics,
-    ScrollContext context,
+class _IndexedListViewState extends State<IndexedListView> {
+  //
+  @override
+  void initState() {
+    super.initState();
+    widget.controller?.addListener(_rebuild);
+  }
+
+  void _rebuild() => setState(() {});
+
+  @override
+  void didUpdateWidget(IndexedListView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller.removeListener(_rebuild);
+      widget.controller.addListener(_rebuild);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller?.removeListener(_rebuild);
+    widget.controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> slivers = _buildSlivers(context, negative: false);
+    final List<Widget> negativeSlivers = _buildSlivers(context, negative: true);
+    final AxisDirection axisDirection = _getDirection(context);
+    final scrollPhysics = AlwaysScrollableScrollPhysics(parent: widget.physics);
+    return Scrollable(
+      // Rebuild everything when the originIndex changes.
+      key: ValueKey(widget.controller._originIndex),
+      axisDirection: axisDirection,
+      controller: widget.controller,
+      physics: scrollPhysics,
+      viewportBuilder: (BuildContext context, ViewportOffset offset) {
+        return Builder(builder: (BuildContext context) {
+          /// Build negative [ScrollPosition] for the negative scrolling [Viewport].
+          final state = Scrollable.of(context);
+          final negativeOffset = _IndexedScrollPosition(
+            physics: scrollPhysics,
+            context: state,
+            initialPixels: -offset.pixels,
+            keepScrollOffset: widget.controller.keepScrollOffset,
+          );
+
+          /// Keep the negative scrolling [Viewport] positioned to the [ScrollPosition].
+          offset.addListener(() {
+            negativeOffset._forceNegativePixels(offset.pixels);
+          });
+
+          /// Stack the two [Viewport]s on top of each other so they move in sync.
+          return Stack(
+            children: <Widget>[
+              Viewport(
+                axisDirection: flipAxisDirection(axisDirection),
+                anchor: 1.0,
+                offset: negativeOffset,
+                slivers: negativeSlivers,
+                cacheExtent: widget.cacheExtent,
+              ),
+              Viewport(
+                axisDirection: axisDirection,
+                offset: offset,
+                slivers: slivers,
+                cacheExtent: widget.cacheExtent,
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  AxisDirection _getDirection(BuildContext context) {
+    return getAxisDirectionFromAxisReverseAndDirectionality(
+        context, widget.scrollDirection, widget.reverse);
+  }
+
+  List<Widget> _buildSlivers(BuildContext context, {bool negative = false}) {
+    Widget sliver;
+    if (widget.itemExtent != null) {
+      sliver = SliverFixedExtentList(
+        delegate: negative ? widget.negativeChildrenDelegate : widget.positiveChildrenDelegate,
+        itemExtent: widget.itemExtent,
+      );
+    } else {
+      sliver = SliverList(
+          delegate: negative ? widget.negativeChildrenDelegate : widget.positiveChildrenDelegate);
+    }
+    if (widget.padding != null) {
+      sliver = SliverPadding(
+        padding: negative
+            ? widget.padding - EdgeInsets.only(bottom: widget.padding.bottom)
+            : widget.padding - EdgeInsets.only(top: widget.padding.top),
+        sliver: sliver,
+      );
+    }
+    return <Widget>[sliver];
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(EnumProperty<Axis>('scrollDirection', widget.scrollDirection));
+    properties
+        .add(FlagProperty('reverse', value: widget.reverse, ifTrue: 'reversed', showName: true));
+    properties.add(DiagnosticsProperty<ScrollController>('controller', widget.controller,
+        showName: false, defaultValue: null));
+    properties.add(DiagnosticsProperty<ScrollPhysics>('physics', widget.physics,
+        showName: false, defaultValue: null));
+    properties.add(
+        DiagnosticsProperty<EdgeInsetsGeometry>('padding', widget.padding, defaultValue: null));
+    properties.add(DoubleProperty('itemExtent', widget.itemExtent, defaultValue: null));
+    properties.add(DoubleProperty('cacheExtent', widget.cacheExtent, defaultValue: null));
+  }
+}
+
+// -------------------------------------------------------------------------------------------------
+
+/// Provides scroll with infinite bounds, and keeps a scroll-position and a origin-index.
+/// The scroll-position is the number of pixels of scroll, considering the item at origin-index
+/// as the origin (0.0). So, for example, if you have scroll-position 10.0 and origin-index 15,
+/// then you are 10 pixels after the 15th item.
+///
+/// Besides regular [ScrollController] methods,
+/// offers [IndexedScrollController.jumpToIndex]
+/// and [IndexedScrollController.animateToIndex].
+///
+class IndexedScrollController extends ScrollController {
+  //
+  final int initialIndex;
+
+  /// the origin-index changes as the list jumps by index.
+  int _originIndex = 0;
+
+  int get originIndex => _originIndex;
+
+  double get initialScrollOffset => _initialScrollOffset ?? super.initialScrollOffset;
+
+  double _initialScrollOffset;
+
+  IndexedScrollController({
+    this.initialIndex = 0,
+    double initialScrollOffset = 0.0,
+    bool keepScrollOffset = true,
+    String debugLabel,
+  })  : assert(initialIndex != null),
+        _originIndex = initialIndex,
+        super(
+          initialScrollOffset: initialScrollOffset,
+          keepScrollOffset: keepScrollOffset,
+          debugLabel: debugLabel,
+        );
+
+  /// Jumps the origin-index to the given [index], and the scroll-position to [offset],
+  /// without animation, and without checking if the new value is in range.
+  ///
+  /// Any active animation is canceled. If the user is currently scrolling, that
+  /// action is canceled.
+  void jumpToIndexAndOffset({@required int index, @required double offset}) {
+    assert(index != null && offset != null);
+
+    // If we didn't change the origin-index, go to its offset position.
+    if (_originIndex == index) {
+      super.jumpTo(offset);
+    }
+    // If we changed the origin, go to its offset position.
+    else {
+      _originIndex = index;
+      _initialScrollOffset = offset;
+
+      // Notify is enough. The key will change,
+      // and the offset will revert to _initialScrollOffset),
+      notifyListeners();
+    }
+  }
+
+  /// Jumps the origin-index to the given [index], and the scroll-position to 0.0,
+  /// without animation, and without checking if the new value is in range.
+  ///
+  /// Any active animation is canceled. If the user is currently scrolling, that
+  /// action is canceled.
+  void jumpToIndex(int index) {
+    jumpToIndexAndOffset(index: index, offset: 0.0);
+  }
+
+  /// If the current origin-index is already the same as the given [index],
+  /// animates the position from its current value to the [offset] position
+  /// relative to the origin-index.
+  ///
+  /// The returned [Future] will complete when the animation ends, whether it
+  /// completed successfully or whether it was interrupted prematurely.
+  ///
+  /// However, if the current origin-index is different from the given [index],
+  /// this will jump to the new index, without any animation.
+  Future<void> animateToIndexAndOffset({
+    @required int index,
+    @required double offset,
+    Duration duration = const Duration(milliseconds: 750),
+    Curve curve = Curves.decelerate,
+  }) async {
+    assert(index != null && offset != null);
+
+    // If we didn't change origin, go to its 0.0 position.
+    if (_originIndex == index) {
+      _originIndex = index;
+      return super.animateTo(offset, duration: duration, curve: curve);
+    }
+    // If we changed the origin, jump to the index and offset.
+    else {
+      jumpToIndexAndOffset(index: index, offset: offset);
+    }
+  }
+
+  /// If the current origin-index is already the same as the given [index],
+  /// animates the position from its current value to the 0.0 position
+  /// relative to the origin-index.
+  ///
+  /// The returned [Future] will complete when the animation ends, whether it
+  /// completed successfully or whether it was interrupted prematurely.
+  ///
+  /// However, if the current origin-index is different from the given [index],
+  /// this will jump to the new position, without any animation.
+  Future<void> animateToIndex(
+    int index, {
+    Duration duration = const Duration(milliseconds: 750),
+    Curve curve = Curves.decelerate,
+  }) {
+    return animateToIndexAndOffset(index: index, offset: 0.0, duration: duration, curve: curve);
+  }
+
+  /// Goes to origin-index 0,
+  /// and then jumps the scroll position from its current value to the given [offset],
+  /// without animation, and without checking if the new value is in range.
+  ///
+  /// Any active animation is canceled. If the user is currently scrolling, that
+  /// action is canceled.
+  ///
+  /// If this method changes the scroll position, a sequence of start/update/end
+  /// scroll notifications will be dispatched. No overscroll notifications can
+  /// be generated by this method.
+  ///
+  /// Immediately after the jump, a ballistic activity is started, in case the
+  /// value was out of range.
+  void jumpTo(double offset) {
+    jumpToIndexAndOffset(index: 0, offset: offset);
+  }
+
+  /// Goes to origin-index 0,
+  /// and then animates the position from its current value to the given [offset].
+  ///
+  /// Any active animation is canceled. If the user is currently scrolling, that
+  /// action is canceled.
+  ///
+  /// The returned [Future] will complete when the animation ends, whether it
+  /// completed successfully or whether it was interrupted prematurely.
+  ///
+  /// An animation will be interrupted whenever the user attempts to scroll
+  /// manually, or whenever another activity is started, or whenever the
+  /// animation reaches the edge of the viewport and attempts to overscroll. (If
+  /// the [ScrollPosition] does not overscroll but instead allows scrolling
+  /// beyond the extents, then going beyond the extents will not interrupt the
+  /// animation.)
+  ///
+  /// The animation is indifferent to changes to the viewport or content
+  /// dimensions.
+  ///
+  /// Once the animation has completed, the scroll position will attempt to
+  /// begin a ballistic activity in case its value is not stable (for example,
+  /// if it is scrolled beyond the extents and in that situation the scroll
+  /// position would normally bounce back).
+  ///
+  /// The duration must not be zero. To jump to a particular value without an
+  /// animation, use [jumpTo].
+  Future<void> animateTo(
+    double offset, {
+    Duration duration = const Duration(milliseconds: 750),
+    Curve curve = Curves.decelerate,
+  }) {
+    return animateToIndexAndOffset(index: 0, offset: offset);
+  }
+
+  /// Same as [jumpTo] but will keep the current origin-index.
+  void jumpToWithSameOriginIndex(double offset) {
+    return super.jumpTo(offset);
+  }
+
+  /// Same as [animateTo] but will keep the current origin-index.
+  Future<void> animateToWithSameOriginIndex(
+    double offset, {
+    Duration duration = const Duration(milliseconds: 750),
+    Curve curve = Curves.decelerate,
+  }) {
+    return super.animateTo(offset, duration: duration, curve: curve);
+  }
+
+  /// Same as [jumpTo] but will move [offset] from the current position.
+  void jumpToRelative(double offset) {
+    return super.jumpTo(this.offset + offset);
+  }
+
+  /// Same as [animateTo] but will move [offset] from the current position.
+  Future<void> animateToRelative(
+    double offset, {
+    Duration duration = const Duration(milliseconds: 750),
+    Curve curve = Curves.decelerate,
+  }) {
+    return super.animateTo(this.offset + offset, duration: duration, curve: curve);
+  }
+
+  @override
+  ScrollPosition createScrollPosition(
+      ScrollPhysics physics, ScrollContext context, ScrollPosition oldPosition) {
+    return _IndexedScrollPosition(
+      physics: physics,
+      context: context,
+      initialPixels: initialScrollOffset,
+      keepScrollOffset: keepScrollOffset,
+      oldPosition: oldPosition,
+      debugLabel: debugLabel,
+    );
+  }
+}
+
+// -------------------------------------------------------------------------------------------------
+
+class _IndexedScrollPosition extends ScrollPositionWithSingleContext {
+  _IndexedScrollPosition({
+    @required ScrollPhysics physics,
+    @required ScrollContext context,
+    double initialPixels = 0.0,
+    bool keepScrollOffset = true,
     ScrollPosition oldPosition,
-    double initialPixels,
+    String debugLabel,
   }) : super(
           physics: physics,
           context: context,
-          oldPosition: oldPosition,
           initialPixels: initialPixels,
+          keepScrollOffset: keepScrollOffset,
+          oldPosition: oldPosition,
+          debugLabel: debugLabel,
         );
+
+  void _forceNegativePixels(double offset) {
+    super.forcePixels(-offset);
+  }
 
   @override
   double get minScrollExtent => double.negativeInfinity;
 
   @override
   double get maxScrollExtent => double.infinity;
-
-  /// There is a feedback-loop between aboveController and belowController. When one of them is
-  /// being used, it controls the other. However if they get out of sync, for timing reasons,
-  /// the controlled one with try to control the other, and the jump will stop the real controller.
-  /// For this reason, we can't let one stop the other (idle and ballistics) in this situation.
-  void jumpToWithoutGoingIdleAndKeepingBallistic(double value) {
-    if (pixels != value) {
-      forcePixels(value);
-    }
-  }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class IndexedScrollController extends ScrollController {
-  //
-  int _startIndex = 0;
-  int get startIndex => _startIndex;
-
-  bool _hasChangedStartIndex = false;
-
-  IndexedScrollController({
-    double initialScrollOffset = 0.0,
-    keepScrollOffset = true,
-    debugLabel,
-  }) : super(
-            initialScrollOffset: initialScrollOffset,
-            keepScrollOffset: keepScrollOffset,
-            debugLabel: debugLabel);
-
-  void jumpToIndex(int index) {
-    if (_startIndex != index) {
-      _startIndex = index;
-      _hasChangedStartIndex = true;
-      notifyListeners();
-    } else
-      jumpTo(0.0);
-  }
-
-  /// Animates only if you are going back to the last index you jumped to.
-  void animateToIndex(
-    int index, {
-    Duration duration = const Duration(milliseconds: 750),
-    Curve curve = Curves.decelerate,
-  }) {
-    if (_startIndex != index) {
-      _startIndex = index;
-      _hasChangedStartIndex = true;
-      notifyListeners();
-    } else
-      animateTo(0.0, duration: duration, curve: curve);
-  }
-
-  @override
-  _UnboundedScrollPosition createScrollPosition(
-    ScrollPhysics physics,
-    ScrollContext context,
-    ScrollPosition oldPosition,
-  ) {
-    return _UnboundedScrollPosition(
-      physics: physics,
-      context: context,
-      oldPosition: oldPosition,
-      initialPixels: initialScrollOffset,
-    );
-  }
-
-  void _jumpToWithoutGoingIdleAndKeepingBallistic(double value) {
-    assert(positions.isNotEmpty, 'ScrollController not attached.');
-    for (_UnboundedScrollPosition position in new List<ScrollPosition>.from(positions))
-      position.jumpToWithoutGoingIdleAndKeepingBallistic(value);
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class _IndexedListViewState extends State<IndexedListView> {
-  //
-  IndexedScrollController _positiveController;
-  IndexedScrollController _negativeController;
-
-  int startIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Use the widget.controller as the positive controller, if given.
-    // Otherwise, create our own internal positive controller.
-    if (widget.controller == null) {
-      _positiveController = IndexedScrollController();
-    } else
-      _positiveController = widget.controller;
-
-    // Create an internal negative controller.
-    _negativeController = IndexedScrollController(
-      keepScrollOffset: false,
-      initialScrollOffset: -10000.0, // Starts out of the screen.
-    );
-
-    // Instantiate the negative and positive list positions, relative to one another.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _negativeController
-        .jumpTo(-_negativeController.position.extentInside - _positiveController.position.pixels));
-
-    // Add both controller listeners.
-    _addPositiveControllerListener();
-    _addNegativeControllerListener();
-  }
-
-  void _addPositiveControllerListener() {
-    _positiveController.addListener(() {
-      // If the start index has changed, move both controllers to the initial position.
-      if (_positiveController._hasChangedStartIndex) {
-        _positiveController._hasChangedStartIndex = false;
-        startIndex = _positiveController._startIndex;
-
-        // Recreate the _negativeController.
-        _negativeController?.dispose();
-        _negativeController = IndexedScrollController(
-            keepScrollOffset: false,
-            initialScrollOffset: -_negativeController.position.extentInside);
-        _addNegativeControllerListener();
-
-        setState(() {});
-      }
-
-      // The POSITIVE list moves the NEGATIVE list, but only if the NEGATIVE list position would change.
-      else {
-        if (_negativeController.hasClients) {
-          var newNegativePosition =
-              -_negativeController.position.extentInside - _positiveController.position.pixels;
-          var oldNegativePosition = _negativeController.position.pixels;
-
-          if (newNegativePosition != oldNegativePosition) {
-            _negativeController._jumpToWithoutGoingIdleAndKeepingBallistic(newNegativePosition);
-          }
-        }
-      }
-    });
-  }
-
-  void _addNegativeControllerListener() {
-    // The NEGATIVE list moves the POSITIVE list, but only if the POSITIVE list position would change.
-    _negativeController.addListener(() {
-      var newBelowPosition =
-          -_positiveController.position.extentInside - _negativeController.position.pixels;
-      var oldBelowPosition = _positiveController.position.pixels;
-
-      if (newBelowPosition != oldBelowPosition) {
-        _positiveController._jumpToWithoutGoingIdleAndKeepingBallistic(newBelowPosition);
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(IndexedListView oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // TODO: Should check if widget.controller changed, and remove/addListener as needed.
-  }
-
-  @override
-  void dispose() {
-    if (widget.controller == null) _positiveController.dispose();
-
-    _negativeController.dispose();
-
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    //
-
-    var negativeList = ListView.builder(
-        key: ObjectKey("neg$startIndex"),
-        controller: _negativeController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        reverse: true,
-        itemBuilder: (BuildContext context, int index) {
-          var relativeIndex = -index - 1 + startIndex;
-          return widget.itemBuilder(context, relativeIndex);
-        });
-
-    var positiveList = ListView.builder(
-      key: ObjectKey("pos$startIndex"),
-      controller: _positiveController,
-      itemBuilder: (BuildContext context, int index) {
-        var relativeIndex = index + startIndex;
-        return widget.itemBuilder(context, relativeIndex);
-      },
-    );
-
-    return Stack(
-      children: <Widget>[
-        negativeList,
-        _ControlledIgnorePointer(
-          child: positiveList,
-          controller: _positiveController,
-        ),
-      ],
-    );
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class _ControlledIgnorePointer extends SingleChildRenderObjectWidget {
-  //
-  final ScrollController controller;
-
-  const _ControlledIgnorePointer({@required this.controller, @required Widget child})
-      : assert(controller != null),
-        assert(child != null),
-        super(child: child);
-
-  @override
-  _ControlledRenderIgnorePointer createRenderObject(BuildContext context) {
-    return new _ControlledRenderIgnorePointer(controller: controller);
-  }
-
-  @override
-  void updateRenderObject(BuildContext context, _ControlledRenderIgnorePointer renderObject) {
-    renderObject..controller = controller;
-  }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/// Render object that is invisible to hit testing in certain controller offsets.
-class _ControlledRenderIgnorePointer extends RenderProxyBox {
-  _ControlledRenderIgnorePointer({RenderBox child, ScrollController controller})
-      : _controller = controller,
-        super(child) {
-    assert(_controller != null);
-  }
-
-  ScrollController get controller => _controller;
-  ScrollController _controller;
-  set controller(ScrollController value) {
-    assert(value != null);
-    if (value == _controller) return;
-    _controller = value;
-  }
-
-  @override
-  bool hitTest(HitTestResult hitTestResult, {Offset position}) {
-    bool ignore = -controller.position.pixels > position.dy;
-    var boolResult = ignore ? false : super.hitTest(hitTestResult, position: position);
-    return boolResult;
-  }
-}
+// -------------------------------------------------------------------------------------------------

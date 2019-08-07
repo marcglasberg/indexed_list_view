@@ -19,3 +19,7 @@
 ## [0.0.5] - 22/02/2012
 
 * Fixed dart version.
+
+## [1.0.0] - 06/08/2019
+
+* New design based on infinite_list_view.
