@@ -14,6 +14,7 @@ import 'package:flutter/widgets.dart';
 ///
 /// ListView that lets you jump instantly to any index.
 /// Only works for lists with infinite extent.
+/// Do NOT use [itemCount], it will not work as expected.
 class IndexedListView extends StatefulWidget {
   /// See [ListView.builder]
   IndexedListView.builder({
@@ -25,7 +26,7 @@ class IndexedListView extends StatefulWidget {
     this.padding,
     this.itemExtent,
     @required IndexedWidgetBuilder itemBuilder,
-    int itemCount,
+    int itemCount, // ItemCount should not be used.
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.cacheExtent,
@@ -156,7 +157,7 @@ class _IndexedListViewState extends State<IndexedListView> {
     final List<Widget> slivers = _buildSlivers(context, negative: false);
     final List<Widget> negativeSlivers = _buildSlivers(context, negative: true);
     final AxisDirection axisDirection = _getDirection(context);
-    final scrollPhysics = AlwaysScrollableScrollPhysics(parent: widget.physics);
+    final scrollPhysics = widget.physics ?? _AlwaysScrollableScrollPhysics();
     return Scrollable(
       // Rebuild everything when the originIndex changes.
       key: ValueKey(widget.controller._originIndex),
@@ -244,6 +245,21 @@ class _IndexedListViewState extends State<IndexedListView> {
     properties.add(DoubleProperty('itemExtent', widget.itemExtent, defaultValue: null));
     properties.add(DoubleProperty('cacheExtent', widget.cacheExtent, defaultValue: null));
   }
+}
+
+// -------------------------------------------------------------------------------------------------
+
+class _AlwaysScrollableScrollPhysics extends ScrollPhysics {
+  /// Creates scroll physics that always lets the user scroll.
+  const _AlwaysScrollableScrollPhysics({ScrollPhysics parent}) : super(parent: parent);
+
+  @override
+  _AlwaysScrollableScrollPhysics applyTo(ScrollPhysics ancestor) {
+    return _AlwaysScrollableScrollPhysics(parent: buildParent(ancestor));
+  }
+
+  @override
+  bool shouldAcceptUserOffset(ScrollMetrics position) => true;
 }
 
 // -------------------------------------------------------------------------------------------------

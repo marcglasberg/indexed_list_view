@@ -23,3 +23,7 @@
 ## [1.0.0] - 2019/08/06
 
 * New design based on infinite_list_view.
+
+## [1.0.4] - 2019/08/28
+
+* Lets you define NeverScrollableScrollPhysics.

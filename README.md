@@ -132,7 +132,7 @@ Hopefully this widget will become obsolete when Flutter's original ListView allo
 indexes and for indexed jumps. See: https://github.com/flutter/flutter/issues/12319
 
 *This package got some ideas from [Collin Jackson's code in StackOverflow](https://stackoverflow.com/questions/44468337/how-can-i-make-a-scrollable-wrapping-view-with-flutter),
-and used lots of code from [Simon Lightfoot's infinite_listview](https://pub.dev/packages/infinite_listview).* 
+and uses lots of code from [Simon Lightfoot's infinite_listview](https://pub.dev/packages/infinite_listview).* 
 
 *The Flutter packages I've authored:* 
 * <a href="https://pub.dev/packages/async_redux">async_redux</a>
@@ -143,7 +143,7 @@ and used lots of code from [Simon Lightfoot's infinite_listview](https://pub.dev
 * <a href="https://pub.dev/packages/indexed_list_view">indexed_list_view</a> 
 * <a href="https://pub.dev/packages/animated_size_and_fade">animated_size_and_fade</a>
 
----<br>_https://github.com/marcglasberg_<br>
+---<br>_Marcelo Glasberg:_<br>_https://github.com/marcglasberg_<br>
 _https://twitter.com/glasbergmarcelo_<br>
 _https://stackoverflow.com/users/3411681/marcg_<br>
 _https://medium.com/@marcglasberg_<br>
