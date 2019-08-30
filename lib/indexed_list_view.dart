@@ -18,14 +18,14 @@ class IndexedListView extends StatefulWidget {
   /// See [ListView.builder]
   IndexedListView.builder({
     Key key,
+    @required this.controller,
+    @required IndexedWidgetBuilder itemBuilder,
+    this.emptyItemBuilder = defaultEmptyItemBuilder,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
-    IndexedScrollController controller,
     this.physics,
     this.padding,
     this.itemExtent,
-    @required IndexedWidgetBuilder itemBuilder,
-    this.emptyItemBuilder = defaultEmptyItemBuilder,
     int maxItemCount,
     int minItemCount,
     bool addAutomaticKeepAlives = true,
@@ -56,20 +56,19 @@ class IndexedListView extends StatefulWidget {
           addAutomaticKeepAlives: addAutomaticKeepAlives,
           addRepaintBoundaries: addRepaintBoundaries,
         ),
-        controller = controller ?? IndexedScrollController(),
         super(key: key);
 
   /// See [ListView.separated]
   IndexedListView.separated({
     Key key,
+    @required this.controller,
+    @required IndexedWidgetBuilder itemBuilder,
+    @required IndexedWidgetBuilder separatorBuilder,
+    this.emptyItemBuilder = defaultEmptyItemBuilder,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
-    @required this.controller,
     this.physics,
     this.padding,
-    @required IndexedWidgetBuilder itemBuilder,
-    this.emptyItemBuilder = defaultEmptyItemBuilder,
-    @required IndexedWidgetBuilder separatorBuilder,
     int maxItemCount,
     int minItemCount,
     bool addAutomaticKeepAlives = true,
@@ -189,16 +188,16 @@ class _IndexedListViewState extends State<IndexedListView> {
       physics: scrollPhysics,
       viewportBuilder: (BuildContext context, ViewportOffset offset) {
         return Builder(builder: (BuildContext context) {
-          /// Build negative [ScrollPosition] for the negative scrolling [Viewport].
+          // Build negative [ScrollPosition] for the negative scrolling [Viewport].
           final state = Scrollable.of(context);
           final negativeOffset = _IndexedScrollPosition(
             physics: scrollPhysics,
             context: state,
             initialPixels: -offset.pixels,
-            keepScrollOffset: widget.controller.keepScrollOffset,
+            keepScrollOffset: false,
           );
 
-          /// Keep the negative scrolling [Viewport] positioned to the [ScrollPosition].
+          // Keep the negative scrolling [Viewport] positioned to the [ScrollPosition].
           offset.addListener(() {
             negativeOffset._forceNegativePixels(offset.pixels);
           });
