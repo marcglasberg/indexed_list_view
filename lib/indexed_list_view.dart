@@ -1,8 +1,8 @@
 library infinite_listview;
 
 import 'dart:async';
-import 'dart:math' as math;
 
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
@@ -14,7 +14,6 @@ import 'package:flutter/widgets.dart';
 ///
 /// ListView that lets you jump instantly to any index.
 /// Only works for lists with infinite extent.
-/// Do NOT use [itemCount], it will not work as expected.
 class IndexedListView extends StatefulWidget {
   /// See [ListView.builder]
   IndexedListView.builder({
@@ -26,22 +25,34 @@ class IndexedListView extends StatefulWidget {
     this.padding,
     this.itemExtent,
     @required IndexedWidgetBuilder itemBuilder,
-    int itemCount, // ItemCount should not be used.
+    this.emptyItemBuilder = defaultEmptyItemBuilder,
+    int maxItemCount,
+    int minItemCount,
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.cacheExtent,
   })  : separated = false,
         positiveChildrenDelegate = SliverChildBuilderDelegate(
-          (BuildContext context, int index) =>
-              itemBuilder(context, index + controller._originIndex),
-          childCount: itemCount,
+          (BuildContext context, int index) {
+            var _index = index + controller._originIndex;
+            if ((minItemCount != null && _index < minItemCount) ||
+                (maxItemCount != null && _index > maxItemCount))
+              return emptyItemBuilder(context, _index);
+            else
+              return itemBuilder(context, _index) ?? emptyItemBuilder(context, _index);
+          },
           addAutomaticKeepAlives: addAutomaticKeepAlives,
           addRepaintBoundaries: addRepaintBoundaries,
         ),
         negativeChildrenDelegate = SliverChildBuilderDelegate(
-          (BuildContext context, int index) =>
-              itemBuilder(context, -1 - index + controller._originIndex),
-          childCount: itemCount,
+          (BuildContext context, int index) {
+            var _index = -1 - index + controller._originIndex;
+            if ((minItemCount != null && _index < minItemCount) ||
+                (maxItemCount != null && _index > maxItemCount))
+              return emptyItemBuilder(context, _index);
+            else
+              return itemBuilder(context, _index) ?? emptyItemBuilder(context, _index);
+          },
           addAutomaticKeepAlives: addAutomaticKeepAlives,
           addRepaintBoundaries: addRepaintBoundaries,
         ),
@@ -53,43 +64,56 @@ class IndexedListView extends StatefulWidget {
     Key key,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
-    IndexedScrollController controller,
+    @required this.controller,
     this.physics,
     this.padding,
     @required IndexedWidgetBuilder itemBuilder,
+    this.emptyItemBuilder = defaultEmptyItemBuilder,
     @required IndexedWidgetBuilder separatorBuilder,
-    int itemCount,
+    int maxItemCount,
+    int minItemCount,
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.cacheExtent,
-  })  : assert(itemBuilder != null),
+  })  : assert(controller != null),
+        assert(itemBuilder != null),
         assert(separatorBuilder != null),
         separated = true,
         itemExtent = null,
         positiveChildrenDelegate = SliverChildBuilderDelegate(
           (BuildContext context, int index) {
-            final itemIndex = (index ~/ 2) + controller._originIndex;
-            return index.isEven
-                ? itemBuilder(context, itemIndex)
-                : separatorBuilder(context, itemIndex);
+            final _index = (index ~/ 2) + controller._originIndex;
+            if ((minItemCount != null && _index < minItemCount) ||
+                (maxItemCount != null && _index > maxItemCount))
+              return emptyItemBuilder(context, _index);
+            else
+              return index.isEven
+                  ? (itemBuilder(context, _index) ?? emptyItemBuilder(context, _index))
+                  : separatorBuilder(context, _index);
           },
-          childCount: itemCount != null ? math.max(0, itemCount * 2 - 1) : null,
           addAutomaticKeepAlives: addAutomaticKeepAlives,
           addRepaintBoundaries: addRepaintBoundaries,
         ),
         negativeChildrenDelegate = SliverChildBuilderDelegate(
           (BuildContext context, int index) {
-            final itemIndex = ((-1 - index) ~/ 2) + controller._originIndex;
-            return index.isOdd
-                ? itemBuilder(context, itemIndex)
-                : separatorBuilder(context, itemIndex);
+            final _index = ((-1 - index) ~/ 2) + controller._originIndex;
+            if ((minItemCount != null && _index < minItemCount) ||
+                (maxItemCount != null && _index > maxItemCount))
+              return emptyItemBuilder(context, _index);
+            else
+              return index.isOdd
+                  ? (itemBuilder(context, _index) ?? emptyItemBuilder(context, _index))
+                  : separatorBuilder(context, _index);
           },
-          childCount: itemCount,
           addAutomaticKeepAlives: addAutomaticKeepAlives,
           addRepaintBoundaries: addRepaintBoundaries,
         ),
-        controller = controller ?? IndexedScrollController(),
         super(key: key);
+
+  static Widget defaultEmptyItemBuilder(BuildContext context, int index) =>
+      Container(width: 5, height: 5);
+
+  final IndexedWidgetBuilder emptyItemBuilder;
 
   final bool separated;
 
@@ -148,7 +172,6 @@ class _IndexedListViewState extends State<IndexedListView> {
   @override
   void dispose() {
     widget.controller?.removeListener(_rebuild);
-    widget.controller?.dispose();
     super.dispose();
   }
 

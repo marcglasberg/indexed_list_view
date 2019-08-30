@@ -24,6 +24,11 @@
 
 * New design based on infinite_list_view.
 
-## [1.0.4] - 2019/08/28
+## [1.0.5] - 2019/08/28
 
 * Lets you define NeverScrollableScrollPhysics.
+
+## [1.0.6] - 2019/08/28
+
+* MinItemCount and maxItemCount.
+

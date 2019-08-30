@@ -5,7 +5,12 @@ The index jump happens **instantly**, no matter if you have millions of items.
 
 Limitation: The list is always infinite both to positive and negative indexes.
 In other words, it can be scrolled indefinitely both to the top and to the bottom.
-You can give it an item count, but this will not prevent the list from scrolling indefinitely.
+
+You can define index bounds by giving it a `minItemCount` and `maxItemCount`, 
+but this will not prevent the list from scrolling indefinitely.
+When showing items out of the index bounds, or when your `itemBuilder` returns `null`, 
+it will ask the `emptyItemBuilder` to create an "empty" item to be displayed instead. 
+As default, this will return empty containers.
 
 ## Usage
 
