@@ -1,3 +1,5 @@
+[![pub package](https://img.shields.io/pub/v/indexed_list_view.svg)](https://pub.dartlang.org/packages/indexed_list_view)
+
 # indexed_list_view
 
 Similar to a ListView, but lets you **programmatically jump to any item**, by index.
