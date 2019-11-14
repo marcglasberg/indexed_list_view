@@ -32,7 +32,7 @@
 
 * MinItemCount and maxItemCount.
 
-## [1.0.7] - 2019/08/30
+## [1.0.8] - 2019/08/30
 
 * Fixed PageStorageKey.
 

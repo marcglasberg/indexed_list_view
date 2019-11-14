@@ -1,6 +1,6 @@
 name: indexed_list_view
 description: Similar to a ListView, but lets you programmatically jump instantly to any item, by index. Performant for lists of any size.
-version: 1.0.7
+version: 1.0.8
 author: Marcelo Glasberg <marcglasberg@gmail.com>
 homepage: https://github.com/marcglasberg/indexed_list_view
 
