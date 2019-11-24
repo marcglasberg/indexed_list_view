@@ -151,6 +151,7 @@ and uses lots of code from [Simon Lightfoot's infinite_listview](https://pub.dev
 * <a href="https://pub.dev/packages/back_button_interceptor">back_button_interceptor</a>
 * <a href="https://pub.dev/packages/indexed_list_view">indexed_list_view</a> 
 * <a href="https://pub.dev/packages/animated_size_and_fade">animated_size_and_fade</a>
+* <a href="https://pub.dev/packages/assorted_layout_widgets">assorted_layout_widgets</a>
 
 ---<br>_Marcelo Glasberg:_<br>_https://github.com/marcglasberg_<br>
 _https://twitter.com/glasbergmarcelo_<br>
