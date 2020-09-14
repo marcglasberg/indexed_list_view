@@ -1,3 +1,7 @@
+## [1.1.5] - 2020/09/14
+
+* Docs improvement.
+
 ## [1.1.4] - 2020/05/19
 
 * Docs improvement.
