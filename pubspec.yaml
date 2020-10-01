@@ -1,8 +1,11 @@
 name: indexed_list_view
-description: Similar to a ListView, but lets you programmatically jump instantly to any item, by index. Performant for lists of any size.
+description: Infinite ListView that lets you programmatically jump instantly to any item, by index. Performant for lists of any size.
 version: 1.1.5
 author: Marcelo Glasberg <marcglasberg@gmail.com>
 homepage: https://github.com/marcglasberg/indexed_list_view
+
+environment:
+  sdk: ">=2.8.0 <3.0.0"
 
 dependencies:
   flutter:
@@ -11,8 +14,5 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-environment:
-  sdk: ">=2.8.0 <3.0.0"
 
 flutter:

@@ -5,7 +5,7 @@
 Similar to a ListView, but lets you **programmatically jump to any item**, by index.
 The index jump happens **instantly**, no matter if you have millions of items.
 
-Limitation: The list is always infinite both to positive and negative indexes.
+Limitation: The list is always **_infinite_** both to positive and negative indexes.
 In other words, it can be scrolled indefinitely both to the top and to the bottom.
 
 You can define index bounds by giving it a `minItemCount` and `maxItemCount`, 
