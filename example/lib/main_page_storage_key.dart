@@ -75,7 +75,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  IndexedWidgetBuilder itemBuilder() {
+  IndexedWidgetBuilderOrNull itemBuilder() {
     //
     final List<double> heights =
         List<double>.generate(527, (i) => Random().nextInt(200).toDouble() + 30.0);

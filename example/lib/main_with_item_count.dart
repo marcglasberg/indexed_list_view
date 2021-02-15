@@ -101,7 +101,7 @@ class HomePage extends StatelessWidget {
       );
 
   /// It only provides items between indexes -20 and 30.
-  IndexedWidgetBuilder itemBuilder() {
+  IndexedWidgetBuilderOrNull itemBuilder() {
     //
     final List<double> heights =
         List<double>.generate(527, (i) => Random().nextInt(200).toDouble() + 30.0);

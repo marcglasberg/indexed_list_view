@@ -17,17 +17,17 @@ import 'package:flutter/widgets.dart';
 class IndexedListView extends StatefulWidget {
   /// See [ListView.builder]
   IndexedListView.builder({
-    Key key,
-    @required this.controller,
-    @required IndexedWidgetBuilder itemBuilder,
+    Key? key,
+    required this.controller,
+    required IndexedWidgetBuilderOrNull itemBuilder,
     this.emptyItemBuilder = defaultEmptyItemBuilder,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
     this.physics,
     this.padding,
     this.itemExtent,
-    int maxItemCount,
-    int minItemCount,
+    int? maxItemCount,
+    int? minItemCount,
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.cacheExtent,
@@ -60,24 +60,21 @@ class IndexedListView extends StatefulWidget {
 
   /// See [ListView.separated]
   IndexedListView.separated({
-    Key key,
-    @required this.controller,
-    @required IndexedWidgetBuilder itemBuilder,
-    @required IndexedWidgetBuilder separatorBuilder,
+    Key? key,
+    required this.controller,
+    required IndexedWidgetBuilderOrNull itemBuilder,
+    required IndexedWidgetBuilderOrNull separatorBuilder,
     this.emptyItemBuilder = defaultEmptyItemBuilder,
     this.scrollDirection = Axis.vertical,
     this.reverse = false,
     this.physics,
     this.padding,
-    int maxItemCount,
-    int minItemCount,
+    int? maxItemCount,
+    int? minItemCount,
     bool addAutomaticKeepAlives = true,
     bool addRepaintBoundaries = true,
     this.cacheExtent,
-  })  : assert(controller != null),
-        assert(itemBuilder != null),
-        assert(separatorBuilder != null),
-        separated = true,
+  })  : separated = true,
         itemExtent = null,
         positiveChildrenDelegate = SliverChildBuilderDelegate(
           (BuildContext context, int index) {
@@ -112,7 +109,7 @@ class IndexedListView extends StatefulWidget {
   static Widget defaultEmptyItemBuilder(BuildContext context, int index) =>
       const SizedBox(width: 5, height: 5);
 
-  final IndexedWidgetBuilder emptyItemBuilder;
+  final IndexedWidgetBuilderOrNull emptyItemBuilder;
 
   final bool separated;
 
@@ -126,16 +123,16 @@ class IndexedListView extends StatefulWidget {
   final IndexedScrollController controller;
 
   /// See: [ScrollView.physics]
-  final ScrollPhysics physics;
+  final ScrollPhysics? physics;
 
   /// See: [BoxScrollView.padding]
-  final EdgeInsets padding;
+  final EdgeInsets? padding;
 
   /// See: [ListView.itemExtent]
-  final double itemExtent;
+  final double? itemExtent;
 
   /// See: [ScrollView.cacheExtent]
-  final double cacheExtent;
+  final double? cacheExtent;
 
   /// See: [ListView.childrenDelegate]
   final SliverChildDelegate negativeChildrenDelegate;
@@ -149,12 +146,19 @@ class IndexedListView extends StatefulWidget {
 
 // -------------------------------------------------------------------------------------------------
 
+/// The builder should create a widget for the given index.
+/// When the builder returns `null`, the list will ask the `emptyItemBuilder`
+/// to create an "empty" item to be displayed instead.
+typedef IndexedWidgetBuilderOrNull = Widget? Function(BuildContext context, int index);
+
+// -------------------------------------------------------------------------------------------------
+
 class _IndexedListViewState extends State<IndexedListView> {
   //
   @override
   void initState() {
     super.initState();
-    widget.controller?.addListener(_rebuild);
+    widget.controller.addListener(_rebuild);
   }
 
   void _rebuild() => setState(() {});
@@ -170,7 +174,7 @@ class _IndexedListViewState extends State<IndexedListView> {
 
   @override
   void dispose() {
-    widget.controller?.removeListener(_rebuild);
+    widget.controller.removeListener(_rebuild);
     super.dispose();
   }
 
@@ -189,7 +193,7 @@ class _IndexedListViewState extends State<IndexedListView> {
       viewportBuilder: (BuildContext context, ViewportOffset offset) {
         return Builder(builder: (BuildContext context) {
           // Build negative [ScrollPosition] for the negative scrolling [Viewport].
-          final state = Scrollable.of(context);
+          final state = Scrollable.of(context)!;
           final negativeOffset = _IndexedScrollPosition(
             physics: scrollPhysics,
             context: state,
@@ -235,7 +239,7 @@ class _IndexedListViewState extends State<IndexedListView> {
     if (widget.itemExtent != null) {
       sliver = SliverFixedExtentList(
         delegate: negative ? widget.negativeChildrenDelegate : widget.positiveChildrenDelegate,
-        itemExtent: widget.itemExtent,
+        itemExtent: widget.itemExtent!,
       );
     } else {
       sliver = SliverList(
@@ -244,8 +248,8 @@ class _IndexedListViewState extends State<IndexedListView> {
     if (widget.padding != null) {
       sliver = SliverPadding(
         padding: negative
-            ? widget.padding - EdgeInsets.only(bottom: widget.padding.bottom)
-            : widget.padding - EdgeInsets.only(top: widget.padding.top),
+            ? widget.padding! - EdgeInsets.only(bottom: widget.padding!.bottom)
+            : widget.padding! - EdgeInsets.only(top: widget.padding!.top),
         sliver: sliver,
       );
     }
@@ -273,10 +277,10 @@ class _IndexedListViewState extends State<IndexedListView> {
 
 class _AlwaysScrollableScrollPhysics extends ScrollPhysics {
   /// Creates scroll physics that always lets the user scroll.
-  const _AlwaysScrollableScrollPhysics({ScrollPhysics parent}) : super(parent: parent);
+  const _AlwaysScrollableScrollPhysics({ScrollPhysics? parent}) : super(parent: parent);
 
   @override
-  _AlwaysScrollableScrollPhysics applyTo(ScrollPhysics ancestor) {
+  _AlwaysScrollableScrollPhysics applyTo(ScrollPhysics? ancestor) {
     return _AlwaysScrollableScrollPhysics(parent: buildParent(ancestor));
   }
 
@@ -307,15 +311,14 @@ class IndexedScrollController extends ScrollController {
   @override
   double get initialScrollOffset => _initialScrollOffset ?? super.initialScrollOffset;
 
-  double _initialScrollOffset;
+  double? _initialScrollOffset;
 
   IndexedScrollController({
     this.initialIndex = 0,
     double initialScrollOffset = 0.0,
     bool keepScrollOffset = true,
-    String debugLabel,
-  })  : assert(initialIndex != null),
-        _originIndex = initialIndex,
+    String? debugLabel,
+  })  : _originIndex = initialIndex,
         super(
           initialScrollOffset: initialScrollOffset,
           keepScrollOffset: keepScrollOffset,
@@ -327,9 +330,7 @@ class IndexedScrollController extends ScrollController {
   ///
   /// Any active animation is canceled. If the user is currently scrolling, that
   /// action is canceled.
-  void jumpToIndexAndOffset({@required int index, @required double offset}) {
-    assert(index != null && offset != null);
-
+  void jumpToIndexAndOffset({required int index, required double offset}) {
     // If we didn't change the origin-index, go to its offset position.
     if (_originIndex == index) {
       super.jumpTo(offset);
@@ -364,13 +365,11 @@ class IndexedScrollController extends ScrollController {
   /// However, if the current origin-index is different from the given [index],
   /// this will jump to the new index, without any animation.
   Future<void> animateToIndexAndOffset({
-    @required int index,
-    @required double offset,
+    required int index,
+    required double offset,
     Duration duration = const Duration(milliseconds: 750),
     Curve curve = Curves.decelerate,
   }) async {
-    assert(index != null && offset != null);
-
     // If we didn't change origin, go to its 0.0 position.
     if (_originIndex == index) {
       _originIndex = index;
@@ -482,7 +481,7 @@ class IndexedScrollController extends ScrollController {
 
   @override
   ScrollPosition createScrollPosition(
-      ScrollPhysics physics, ScrollContext context, ScrollPosition oldPosition) {
+      ScrollPhysics physics, ScrollContext context, ScrollPosition? oldPosition) {
     return _IndexedScrollPosition(
       physics: physics,
       context: context,
@@ -498,12 +497,12 @@ class IndexedScrollController extends ScrollController {
 
 class _IndexedScrollPosition extends ScrollPositionWithSingleContext {
   _IndexedScrollPosition({
-    @required ScrollPhysics physics,
-    @required ScrollContext context,
+    required ScrollPhysics physics,
+    required ScrollContext context,
     double initialPixels = 0.0,
     bool keepScrollOffset = true,
-    ScrollPosition oldPosition,
-    String debugLabel,
+    ScrollPosition? oldPosition,
+    String? debugLabel,
   }) : super(
           physics: physics,
           context: context,
