@@ -110,7 +110,7 @@ class IndexedListView extends StatefulWidget {
         super(key: key);
 
   static Widget defaultEmptyItemBuilder(BuildContext context, int index) =>
-      Container(width: 5, height: 5);
+      const SizedBox(width: 5, height: 5);
 
   final IndexedWidgetBuilder emptyItemBuilder;
 
@@ -179,7 +179,7 @@ class _IndexedListViewState extends State<IndexedListView> {
     final List<Widget> slivers = _buildSlivers(context, negative: false);
     final List<Widget> negativeSlivers = _buildSlivers(context, negative: true);
     final AxisDirection axisDirection = _getDirection(context);
-    final scrollPhysics = widget.physics ?? _AlwaysScrollableScrollPhysics();
+    final scrollPhysics = widget.physics ?? const _AlwaysScrollableScrollPhysics();
     return Scrollable(
       // Rebuild everything when the originIndex changes.
       key: ValueKey(widget.controller._originIndex),
@@ -304,6 +304,7 @@ class IndexedScrollController extends ScrollController {
 
   int get originIndex => _originIndex;
 
+  @override
   double get initialScrollOffset => _initialScrollOffset ?? super.initialScrollOffset;
 
   double _initialScrollOffset;
@@ -411,6 +412,7 @@ class IndexedScrollController extends ScrollController {
   ///
   /// Immediately after the jump, a ballistic activity is started, in case the
   /// value was out of range.
+  @override
   void jumpTo(double offset) {
     jumpToIndexAndOffset(index: 0, offset: offset);
   }
@@ -441,6 +443,7 @@ class IndexedScrollController extends ScrollController {
   ///
   /// The duration must not be zero. To jump to a particular value without an
   /// animation, use [jumpTo].
+  @override
   Future<void> animateTo(
     double offset, {
     Duration duration = const Duration(milliseconds: 750),

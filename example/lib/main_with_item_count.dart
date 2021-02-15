@@ -95,16 +95,16 @@ class HomePage extends StatelessWidget {
           padding: const EdgeInsets.all(10.0),
           fillColor: Colors.blue,
           constraints: const BoxConstraints(minWidth: 88.0, minHeight: 30.0),
-          child: Text(text, style: TextStyle(fontSize: 12)),
           onPressed: function,
+          child: Text(text, style: const TextStyle(fontSize: 12)),
         ),
       );
 
   /// It only provides items between indexes -20 and 30.
-  Function itemBuilder() {
+  IndexedWidgetBuilder itemBuilder() {
     //
     final List<double> heights =
-        new List<double>.generate(527, (i) => Random().nextInt(200).toDouble() + 30.0);
+        List<double>.generate(527, (i) => Random().nextInt(200).toDouble() + 30.0);
 
     return (BuildContext context, int index) {
       return Card(

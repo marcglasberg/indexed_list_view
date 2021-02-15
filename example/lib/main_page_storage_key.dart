@@ -26,12 +26,12 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.grey[800],
       ),
       body: hide
-          ? SizedBox()
+          ? const SizedBox()
           : Column(
               children: [
                 Expanded(
                   child: IndexedListView.builder(
-                    key: withKey ? PageStorageKey("MyKey") : null,
+                    key: withKey ? const PageStorageKey("MyKey") : null,
                     controller: HomePage.controller,
                     itemBuilder: itemBuilder(),
                   ),
@@ -43,28 +43,30 @@ class _HomePageState extends State<HomePage> {
                     RawMaterialButton(
                       padding: const EdgeInsets.all(12.0),
                       fillColor: withKey ? Colors.blue : Colors.blue.withOpacity(.5),
-                      child: Text("PageStorageKey ${withKey ? "On" : "Off"}",
-                          style: TextStyle(fontSize: 12)),
                       onPressed: () {
                         setState(() {
                           withKey = !withKey;
                         });
                       },
+                      child: Text(
+                        "PageStorageKey ${withKey ? "On" : "Off"}",
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     ),
                     RawMaterialButton(
                       padding: const EdgeInsets.all(12.0),
                       fillColor: Colors.blue,
-                      child: Text("Rebuild", style: TextStyle(fontSize: 12)),
                       onPressed: () {
                         setState(() {
                           hide = true;
-                          Timer(Duration(milliseconds: 100), () {
+                          Timer(const Duration(milliseconds: 100), () {
                             setState(() {
                               hide = false;
                             });
                           });
                         });
                       },
+                      child: const Text("Rebuild", style: TextStyle(fontSize: 12)),
                     ),
                   ],
                 ),
@@ -73,10 +75,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Function itemBuilder() {
+  IndexedWidgetBuilder itemBuilder() {
     //
     final List<double> heights =
-        new List<double>.generate(527, (i) => Random().nextInt(200).toDouble() + 30.0);
+        List<double>.generate(527, (i) => Random().nextInt(200).toDouble() + 30.0);
 
     return (BuildContext context, int index) => Card(
           child: Container(
