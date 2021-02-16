@@ -49,33 +49,33 @@ class HomePage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    button("jumpTo(-15)", () => controller.jumpTo(-15)),
-                    button("jumpTo(0)", () => controller.jumpTo(0)),
-                    button("jumpTo(50)", () => controller.jumpTo(50)),
+                    button("jumpTo(-15px)", () => controller.jumpTo(-15)),
+                    button("jumpTo(0px)", () => controller.jumpTo(0)),
+                    button("jumpTo(50px)", () => controller.jumpTo(50)),
                   ],
                 ),
                 // ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    button("animateTo(-30)", () => controller.animateTo(-30)),
-                    button("animateTo(50)", () => controller.animateTo(50)),
+                    button("animateTo(-30px)", () => controller.animateTo(-30)),
+                    button("animateTo(50px)", () => controller.animateTo(50)),
                   ],
                 ),
                 // ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    button("jumpToRelative(-250)", () => controller.jumpToRelative(-250)),
-                    button("jumpToRelative(40)", () => controller.jumpToRelative(40)),
+                    button("jumpToRelative(-250px)", () => controller.jumpToRelative(-250)),
+                    button("jumpToRelative(40px)", () => controller.jumpToRelative(40)),
                   ],
                 ),
                 // ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    button("animateToRelative(-250)", () => controller.animateToRelative(-250)),
-                    button("animateToRelative(40)", () => controller.animateToRelative(40)),
+                    button("animateToRelative(-250px)", () => controller.animateToRelative(-250)),
+                    button("animateToRelative(40px)", () => controller.animateToRelative(40)),
                   ],
                 ),
               ],
