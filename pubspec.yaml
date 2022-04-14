@@ -1,6 +1,6 @@
 name: indexed_list_view
 description: Infinite ListView that lets you programmatically jump instantly to any item, by index. Performant for lists of any size.
-version: 2.0.1
+version: 2.0.2
 # author: Marcelo Glasberg <marcglasberg@gmail.com>
 homepage: https://github.com/marcglasberg/indexed_list_view
 

@@ -448,7 +448,12 @@ class IndexedScrollController extends ScrollController {
     Duration duration = const Duration(milliseconds: 750),
     Curve curve = Curves.decelerate,
   }) {
-    return animateToIndexAndOffset(index: 0, offset: offset);
+    return animateToIndexAndOffset(
+      index: 0,
+      offset: offset,
+      duration: duration,
+      curve: curve,
+    );
   }
 
   /// Same as [jumpTo] but will keep the current origin-index.

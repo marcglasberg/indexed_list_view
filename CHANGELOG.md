@@ -1,3 +1,7 @@
+## [2.0.2] - 2020/04/14
+
+* Fixed `animateTo()` method which was not using the `duration` and `curve` parameters.
+
 ## [2.0.1] - 2020/09/20
 
 * Docs improvement.
