@@ -10,10 +10,8 @@ import 'package:flutter/widgets.dart';
 // Based upon package infinite_list_view by Simon Lightfoot.
 // For more info, see: https://pub.dartlang.org/packages/indexed_list_view
 
-/// Indexed List View
-///
-/// ListView that lets you jump instantly to any index.
-/// Only works for lists with infinite extent.
+/// A ListView that lets you jump instantly or animate to any list item, by index.
+/// Important: Only works for lists with infinite extent.
 class IndexedListView extends StatefulWidget {
   /// See [ListView.builder]
   IndexedListView.builder({
@@ -144,14 +142,10 @@ class IndexedListView extends StatefulWidget {
   _IndexedListViewState createState() => _IndexedListViewState();
 }
 
-// -------------------------------------------------------------------------------------------------
-
 /// The builder should create a widget for the given index.
 /// When the builder returns `null`, the list will ask the `emptyItemBuilder`
 /// to create an "empty" item to be displayed instead.
 typedef IndexedWidgetBuilderOrNull = Widget? Function(BuildContext context, int index);
-
-// -------------------------------------------------------------------------------------------------
 
 class _IndexedListViewState extends State<IndexedListView> {
   //
@@ -193,7 +187,7 @@ class _IndexedListViewState extends State<IndexedListView> {
       viewportBuilder: (BuildContext context, ViewportOffset offset) {
         return Builder(builder: (BuildContext context) {
           // Build negative [ScrollPosition] for the negative scrolling [Viewport].
-          final state = Scrollable.of(context)!;
+          final state = Scrollable.of(context);
           final negativeOffset = _IndexedScrollPosition(
             physics: scrollPhysics,
             context: state,
@@ -273,8 +267,6 @@ class _IndexedListViewState extends State<IndexedListView> {
   }
 }
 
-// -------------------------------------------------------------------------------------------------
-
 class _AlwaysScrollableScrollPhysics extends ScrollPhysics {
   /// Creates scroll physics that always lets the user scroll.
   const _AlwaysScrollableScrollPhysics({ScrollPhysics? parent}) : super(parent: parent);
@@ -287,8 +279,6 @@ class _AlwaysScrollableScrollPhysics extends ScrollPhysics {
   @override
   bool shouldAcceptUserOffset(ScrollMetrics position) => true;
 }
-
-// -------------------------------------------------------------------------------------------------
 
 /// Provides scroll with infinite bounds, and keeps a scroll-position and a origin-index.
 /// The scroll-position is the number of pixels of scroll, considering the item at origin-index
@@ -498,8 +488,6 @@ class IndexedScrollController extends ScrollController {
   }
 }
 
-// -------------------------------------------------------------------------------------------------
-
 class _IndexedScrollPosition extends ScrollPositionWithSingleContext {
   _IndexedScrollPosition({
     required ScrollPhysics physics,
@@ -527,5 +515,3 @@ class _IndexedScrollPosition extends ScrollPositionWithSingleContext {
   @override
   double get maxScrollExtent => double.infinity;
 }
-
-// -------------------------------------------------------------------------------------------------

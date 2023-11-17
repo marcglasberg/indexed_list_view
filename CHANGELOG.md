@@ -1,3 +1,7 @@
+## [3.0.0] - 2022/11/16
+
+* Flutter 3.16.0 compatible.
+
 ## [2.0.2] - 2020/04/14
 
 * Fixed `animateTo()` method which was not using the `duration` and `curve` parameters.

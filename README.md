@@ -2,11 +2,15 @@
 
 # indexed_list_view
 
-Similar to a ListView, but lets you **programmatically jump to any item**, by index. The index jump
-happens **instantly**, no matter if you have millions of items.
+Similar to a ListView, but lets you **programmatically jump to any item**, by index.
+The index jump happens **instantly**, no matter if you have millions of items.
+It can also animate the scroll, instead of jumping.
 
-Limitation: The list is always **_infinite_** both to positive and negative indexes. In other words,
-it can be scrolled indefinitely both to the top and to the bottom.
+Limitation: The list is always **_infinite_** both to positive and negative indexes.
+In other words, it can be scrolled indefinitely both to the top and to the bottom.
+
+In special, this is useful for implementing **calendars**, where you want to be able to jump to
+specific dates, as calendars can be scrolled indefinitely, both to the past and future dates.
 
 You can define index bounds by giving it a `minItemCount` and `maxItemCount`, but this will not
 prevent the list from scrolling indefinitely. When showing items out of the index bounds, or when
@@ -132,9 +136,6 @@ explained above.
 
 ********
 
-Hopefully this widget will become obsolete when Flutter's original ListView allows for negative
-indexes and for indexed jumps. See: https://github.com/flutter/flutter/issues/12319
-
 *This package got some ideas
 from [Collin Jackson's code in StackOverflow](https://stackoverflow.com/questions/44468337/how-can-i-make-a-scrollable-wrapping-view-with-flutter)
 , and uses lots of code
@@ -178,13 +179,9 @@ from [Simon Lightfoot's infinite_listview](https://pub.dev/packages/infinite_lis
 
 * <a href="https://flutter.dev/docs/development/ui/layout/constraints">Understanding constraints</a>
 
----<br>_Marcelo Glasberg:_<br>
+<br>_Marcelo Glasberg:_<br>
 _https://github.com/marcglasberg_<br>
-_https://linkedin.com/in/marcglasberg/_<br>
+_https://linkedin.com/in/marcglasberg_<br>
 _https://twitter.com/glasbergmarcelo_<br>
 _https://stackoverflow.com/users/3411681/marcg_<br>
 _https://medium.com/@marcglasberg_<br>
-
-
-
-
