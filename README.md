@@ -2,11 +2,13 @@
 
 # indexed_list_view
 
-Similar to a ListView, but lets you **programmatically jump to any item**, by index.
-The index jump happens **instantly**, no matter if you have millions of items.
-It can also animate the scroll, instead of jumping.
+Similar to a ListView, but:
+* Lets you **programmatically jump to any item**, by index.
+* The jump happens **instantly**, no matter if you have millions of items.
+* It can also animate the scroll, instead of jumping.
 
-Limitation: The list is always **_infinite_** both to positive and negative indexes.
+## Limitations 
+The list is always **_infinite_** both to positive and negative indexes.
 In other words, it can be scrolled indefinitely both to the top and to the bottom.
 
 In special, this is useful for implementing **calendars**, where you want to be able to jump to
