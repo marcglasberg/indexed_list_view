@@ -806,10 +806,6 @@ linter:
     # https://dart-lang.github.io/linter/lints/unrelated_type_equality_checks.html
     - unrelated_type_equality_checks
 
-    # Web only
-    # https://dart-lang.github.io/linter/lints/unsafe_html.html
-    - unsafe_html
-
     # Always use hex syntax Color(0x00000001), never Color(1)
     # https://dart-lang.github.io/linter/lints/use_full_hex_values_for_flutter_colors.html
     - use_full_hex_values_for_flutter_colors
