@@ -1,3 +1,9 @@
+## 4.0.0
+
+* Sponsored by [MyText.ai](https://mytext.ai)
+
+[![](./example/SponsoredByMyTextAi.png)](https://mytext.ai)
+
 ## [3.0.2] - 2022/11/16
 
 * Flutter 3.16.0 compatible.
@@ -63,4 +69,3 @@
 
 * Infinite list (both up and down).
 * Jump to index.
-

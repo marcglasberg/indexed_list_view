@@ -1,3 +1,5 @@
+[![](./example/SponsoredByMyTextAi.png)](https://mytext.ai)
+
 [![pub package](https://img.shields.io/pub/v/indexed_list_view.svg)](https://pub.dartlang.org/packages/indexed_list_view)
 
 # indexed_list_view
