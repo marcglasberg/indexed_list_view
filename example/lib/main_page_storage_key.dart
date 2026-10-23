@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
                   children: <Widget>[
                     RawMaterialButton(
                       padding: const EdgeInsets.all(12.0),
-                      fillColor: withKey ? Colors.blue : Colors.blue.withOpacity(.5),
+                      fillColor: withKey ? Colors.blue : Colors.blue.withValues(alpha: .5),
                       onPressed: () {
                         setState(() {
                           withKey = !withKey;
